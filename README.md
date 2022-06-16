@@ -4,7 +4,7 @@ Welcome to Tram Le's GitHub
 --
   
   <a href="https://www.linkedin.com/in/tramle54/L">
-    <img src="https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge"/>
+    <img src="https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge"/> 
   </a>
 </div>
 
@@ -29,4 +29,5 @@ Welcome to Tram Le's GitHub
 
 ---
 
+### :page_facing_up: Resume and Project Experience :
 Resume: <a href="https://github.com/tramthingocle/tramle54/blob/main/Tram%20Le%20resume*.pdf" target="blank">Tram Le Resume </a>
