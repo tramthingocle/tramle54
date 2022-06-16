@@ -29,4 +29,4 @@ Welcome to Tram Le's GitHub
 
 ---
 
-Resume: <a href="tramle54.github.io/folder/Tram Le resume*.pdf" target="blank">Tram Le Resume </a>
+Resume: <a href="https://github.com/tramthingocle/tramle54/blob/main/Tram%20Le%20resume*.pdf" target="blank">Tram Le Resume </a>
