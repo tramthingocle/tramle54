@@ -34,3 +34,7 @@ Welcome to Tram Le's GitHub
 - Twitter Stock Sentiment Analysis: 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis..R" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis.pptx" target="blank">Powerpoint </a>
+- Titanic Survival Rate:
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titantic%20Survival%20Rate%20Analysis.Rmd" target="blank">Code </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.pptx" target="blank">Powerpoint </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.csv" target="blank">Data </a> 
