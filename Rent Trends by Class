@@ -1,0 +1,125 @@
+-- Top 5 class rented during holiday season
+SELECT class_name, COUNT(fingerprint_id) as times_rented, (SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-11-05' and '2021-12-28') as all_rentals, COUNT(fingerprint_id)/(SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-11-05' and '2021-12-28') as pct_class_rented_by_all_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-11-05' and '2021-12-28'
+GROUP BY class_name
+ORDER BY times_rented desc
+LIMIT 6
+;
+-- Top 5 class rented pre holiday season
+SELECT class_name, COUNT(fingerprint_id) as times_rented, (SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-09-05' and '2021-10-28') as all_rentals, COUNT(fingerprint_id)/(SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-09-05' and '2021-10-28') as pct_class_rented_by_all_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-09-05' and '2021-10-28'
+GROUP BY class_name
+ORDER BY times_rented desc
+LIMIT 6
+;
+-- Top 5 class rented december 2021
+SELECT class_name, COUNT(fingerprint_id) as times_rented, (SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-12-01' and '2021-12-28') as all_rentals, COUNT(fingerprint_id)/(SELECT COUNT(fingerprint_id) FROM `reporting.orders`, unnest(items) WHERE ordered_at_date between '2021-12-01' and '2021-12-28') as pct_class_rented_by_all_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-12-01' and '2021-12-28'
+GROUP BY class_name
+ORDER BY times_rented desc
+LIMIT 6
+;
+-- Peak class rentals by day during holiday season
+with num_order_by_day as
+(
+SELECT ordered_at_date, COUNT(fingerprint_id) as all_rentals
+FROM `reporting.orders`, unnest(items)
+GROUP BY ordered_at_date
+)
+SELECT ordered_at_date, class_name, COUNT(fingerprint_id) as times_rented, all_rentals, COUNT(fingerprint_id)/all_rentals as pct_rental_by_date
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN num_order_by_day using(ordered_at_date)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-11-05' and '2021-12-28')
+GROUP BY ordered_at_date, class_name, all_rentals
+ORDER BY ordered_at_date, pct_rental_by_date desc
+;
+-- Peak class rentals by day pre holiday season
+with num_order_by_day as
+(
+SELECT ordered_at_date, COUNT(fingerprint_id) as all_rentals
+FROM `reporting.orders`, unnest(items)
+GROUP BY ordered_at_date
+)
+SELECT ordered_at_date, class_name, COUNT(fingerprint_id) as times_rented, all_rentals, COUNT(fingerprint_id)/all_rentals as pct_rental_by_date
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN num_order_by_day using(ordered_at_date)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-09-05' and '2021-10-28')
+GROUP BY ordered_at_date, class_name, all_rentals
+ORDER BY ordered_at_date, pct_rental_by_date desc
+;
+-- Peak class rentals by day december 2021
+with num_order_by_day as
+(
+SELECT ordered_at_date, COUNT(fingerprint_id) as all_rentals
+FROM `reporting.orders`, unnest(items)
+GROUP BY ordered_at_date
+)
+SELECT ordered_at_date, class_name, COUNT(fingerprint_id) as times_rented, all_rentals, COUNT(fingerprint_id)/all_rentals as pct_rental_by_date
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN num_order_by_day using(ordered_at_date)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-12-01' and '2021-12-28')
+GROUP BY ordered_at_date, class_name, all_rentals
+ORDER BY ordered_at_date, pct_rental_by_date desc
+;
+-- Top 5 rented product for each class during holiday season
+with num_rental_by_class as
+(
+SELECT class_name, COUNT(fingerprint_id) as each_class_total_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-11-05' and '2021-12-28'
+GROUP BY class_name
+)
+SELECT class_name, display_name, sku_id, count(fingerprint_id) as times_fp_rented, each_class_total_rentals, count(fingerprint_id)/each_class_total_rentals as pct_rentals_by_class
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+LEFT JOIN num_rental_by_class using(class_name)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-11-05' and '2021-12-28')
+GROUP BY class_name, sku_id, display_name, each_class_total_rentals
+QUALIFY row_number() over (partition by class_name order by times_fp_rented desc) <=5
+ORDER BY each_class_total_rentals desc, times_fp_rented desc
+;
+-- Top 5 rented product for each class pre holiday season
+with num_rental_by_class as
+(
+SELECT class_name, COUNT(fingerprint_id) as each_class_total_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-09-05' and '2021-10-28'
+GROUP BY class_name
+)
+SELECT class_name, display_name, sku_id, count(fingerprint_id) as times_fp_rented, each_class_total_rentals, count(fingerprint_id)/each_class_total_rentals as pct_rentals_by_class
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+LEFT JOIN num_rental_by_class using(class_name)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-09-05' and '2021-10-28')
+GROUP BY class_name, sku_id, display_name, each_class_total_rentals
+QUALIFY row_number() over (partition by class_name order by times_fp_rented desc) <=5
+ORDER BY each_class_total_rentals desc, times_fp_rented desc
+;
+-- Top 5 rented product for each class december 2021
+with num_rental_by_class as
+(
+SELECT class_name, COUNT(fingerprint_id) as each_class_total_rentals
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+WHERE ordered_at_date between '2021-12-01' and '2021-12-28'
+GROUP BY class_name
+)
+SELECT class_name, display_name, sku_id, count(fingerprint_id) as times_fp_rented, each_class_total_rentals, count(fingerprint_id)/each_class_total_rentals as pct_rentals_by_class
+FROM `reporting.orders`, unnest(items)
+LEFT JOIN `reporting.products` using(sku_id)
+LEFT JOIN num_rental_by_class using(class_name)
+WHERE (class_name = 'Sweaters + Sweatshirts' or class_name = 'Dresses' or class_name = 'Jackets + Coats + Blazers' or class_name = 'Blouses + Shirts' or class_name = 'Jeans + Denim' or class_name = 'Jumpers + Rompers') and (ordered_at_date between '2021-12-01' and '2021-12-28')
+GROUP BY class_name, sku_id, display_name, each_class_total_rentals
+QUALIFY row_number() over (partition by class_name order by times_fp_rented desc) <=5
+ORDER BY each_class_total_rentals desc, times_fp_rented desc
