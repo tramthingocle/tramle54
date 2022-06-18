@@ -31,4 +31,4 @@ Welcome to Tram Le's GitHub
 
 ### :page_facing_up: Resume and Project Experience :
 - Resume: <a href="https://github.com/tramthingocle/tramle54/blob/main/Tram%20Le%20resume*.pdf" target="blank">Tram Le Resume </a>
-- Project:
+- Twitter Stock Sentiment Analysis: <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis..R" target="blank">Code </a> <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis.pptx" target="blank">Powerpoint </a>
