@@ -39,3 +39,5 @@ Welcome to Tram Le's GitHub
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.pptx" target="blank">Powerpoint </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.csv" target="blank">Data </a> 
 - Customer Rent Trends Holiday Season: Analyze customer clothing rental data during 2021 holiday season
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Rent%20Trends%20by%20Class" target="blank">Code </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Holiday%202021_%20Rent_Browsing%20Trends%20by%20Class.xlsx" target="blank">Excel </a> 
