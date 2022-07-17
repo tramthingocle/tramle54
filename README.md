@@ -31,11 +31,11 @@ Welcome to Tram Le's GitHub
 
 ### :page_facing_up: Resume and Project Experience :
 - Resume: <a href="https://github.com/tramthingocle/tramle54/blob/main/Tram%20Le%20resume*.pdf" target="blank">Tram Le Resume </a>
+
+R:
 - Twitter Stock Sentiment Analysis: Analyze stock tweets on Twitter to answer the question: Does public opinions affect stock performance? 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis..R" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis.pptx" target="blank">Powerpoint </a>
-
-R:
 - Titanic Survival Rate: Identify correlation between customer class, age, gender and survival likelihood of Titanic passengers
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titantic%20Survival%20Rate%20Analysis.Rmd" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.pptx" target="blank">Powerpoint </a> 
