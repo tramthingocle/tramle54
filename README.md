@@ -34,11 +34,16 @@ Welcome to Tram Le's GitHub
 - Twitter Stock Sentiment Analysis: Analyze stock tweets on Twitter to answer the question: Does public opinions affect stock performance? 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis..R" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Twitter%20Stock%20Sentiment%20Analysis.pptx" target="blank">Powerpoint </a>
+R:
 - Titanic Survival Rate: Identify correlation between customer class, age, gender and survival likelihood of Titanic passengers
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titantic%20Survival%20Rate%20Analysis.Rmd" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.pptx" target="blank">Powerpoint </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Titanic%20Survival%20Rate.csv" target="blank">Data </a> 
+SQL:
 - Customer Rent Trends Holiday Season: Analyze customer clothing rental data during 2021 holiday season
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Rent%20Trends%20by%20Class" target="blank">Code </a> 
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Holiday%202021_%20Rent_Browsing%20Trends%20by%20Class.xlsx" target="blank">Excel </a> 
+Python:
 - Clothes amortization rate: Graph how fast clothing classes break even against each other to see the determine popularity and forecast customer demand
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Clothes%20amortization%20rate.ipynb" target="blank">Code </a> 
+
