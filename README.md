@@ -31,7 +31,7 @@ Welcome to Tram Le's GitHub
 
 ### :page_facing_up: Resume and Project Experience :
 Resume: 
-- <a href="https://github.com/tramthingocle/tramle54/blob/main/Tram%20Le%20Resume_.pdf">Tram Le Resume </a>
+- <a href="https://drive.google.com/file/d/1BzAAZopWhBEVQYHXps3mHQ-_dc7jgX1T/view?usp=sharing">Tram Le Resume </a>
 
 R:
 - Twitter Stock Sentiment Analysis: Analyze stock tweets on Twitter to answer the question: Does public opinions affect stock performance? 
