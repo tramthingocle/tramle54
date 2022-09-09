@@ -1,0 +1,480 @@
+-- Styling survey common themes
+-- Total customer respond to styling survey by age
+with customer_profile_and_age as
+(
+select distinct profileId, customer_age
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'occasions-qs'  
+)
+, customer_age_total as
+(
+select
+case 
+  when customer_age < 25 then '-25'
+  when customer_age between 25 and 30 then '25-29'
+  when customer_age between 30 and 35 then '30-34'
+  when customer_age between 35 and 40 then '35-39'
+  when customer_age between 40 and 45 then '40-44'
+  when customer_age > 45 then '45+'
+  else null
+  end as age_bracket, count(distinct profileId) as num_cust_by_age, (select count(distinct profileId) from customer_profile_and_age) as total_cust
+from customer_profile_and_age
+group by age_bracket
+order by age_bracket
+)
+select age_bracket, num_cust_by_age, total_cust, num_cust_by_age/total_cust as pct_cust_by_age
+from customer_age_total
+;
+-- Total customer respond to styling survey by state
+with customer_profile_and_age as
+(
+select distinct profileId, customer_shipped_state
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'occasions-qs'
+)
+, customer_state_total as
+(
+select customer_shipped_state, count(distinct profileId) as num_cust_by_state, (select count(distinct profileId) from customer_profile_and_age) as total_cust
+from customer_profile_and_age
+group by customer_shipped_state
+order by num_cust_by_state desc
+)
+select customer_shipped_state, num_cust_by_state, total_cust, num_cust_by_state/total_cust as pct_cust_by_state
+from customer_state_total
+;
+-- Occasion Qs
+with occasions_qs_data as
+(
+select distinct rt as occasion_qs_response, count(rt) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'occasions-qs') as total
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'occasions-qs'
+group by occasion_qs_response
+)
+select occasion_qs_response, num_occurred, total, (num_occurred/total) as pct_occasions_qs
+from occasions_qs_data
+;
+-- Occasion Qs breakdown by age
+with occasion_by_age as
+(
+select distinct profileId, reviewType, rt, customer_age
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'occasions-qs'  
+)
+, customer_age_occasion as
+(
+select
+case 
+  when customer_age < 25 then '-25'
+  when customer_age between 25 and 30 then '25-29'
+  when customer_age between 30 and 35 then '30-34'
+  when customer_age between 35 and 40 then '35-39'
+  when customer_age between 40 and 45 then '40-44'
+  when customer_age > 45 then '45+'
+  else null
+  end as age_bracket, rt as occasion, count(distinct profileId) as num_cust
+from occasion_by_age
+group by rt, age_bracket
+order by age_bracket
+)
+,total_cust as
+(
+select age_bracket, sum(num_cust) as total_cust_by_age
+from customer_age_occasion
+group by age_bracket
+)
+select age_bracket, occasion, num_cust, total_cust_by_age, num_cust/total_cust_by_age as pct_cust_by_age
+from customer_age_occasion
+left join total_cust using(age_bracket)
+order by age_bracket
+;
+-- Occasion Qs breakdown by state
+with occasion_by_state as
+(
+select distinct profileId, reviewType, rt, customer_shipped_state
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'occasions-qs'  
+)
+, customer_state_occasion as
+(
+select customer_shipped_state, rt as occasion, count(distinct profileId) as num_cust
+from occasion_by_state
+group by rt, customer_shipped_state
+order by customer_shipped_state
+)
+,total_cust as
+(
+select customer_shipped_state, sum(num_cust) as total_cust_by_state
+from customer_state_occasion
+group by customer_shipped_state
+)
+select customer_shipped_state, occasion, num_cust, total_cust_by_state, num_cust/total_cust_by_state as pct_cust_by_state
+from customer_state_occasion
+left join total_cust using(customer_shipped_state)
+order by total_cust_by_state desc, customer_shipped_state, pct_cust_by_state desc
+;
+-- Immediate Needs
+with immediate_needs_data as
+(
+select distinct profileId, rt as immediate_needs_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'immediate-needs'
+)
+, categorized_immediate_needs_response as
+(
+select *,
+case 
+  when lower(immediate_needs_response) like '%date%night%' or lower(immediate_needs_response) like '%date%' then 'date'
+  when lower(immediate_needs_response) like '%work%' or lower(immediate_needs_response) like '%job%' or lower(immediate_needs_response) like '%interview%' or lower(immediate_needs_response) like '%professional%' or lower(immediate_needs_response) like '%office%' then 'work'
+  when lower(immediate_needs_response) like '%vacation%' or lower(immediate_needs_response) like '%going%to%' or lower(immediate_needs_response) like '%getaway%' or lower(immediate_needs_response) like '%trip%' or lower(immediate_needs_response) like '%girl%weekend%' or lower(immediate_needs_response) like '%visit%' or lower(immediate_needs_response) like '%travel%' or lower(immediate_needs_response) like '%head%to%' then 'vacation/traveling'
+  when lower(immediate_needs_response) like '%wedding%' or lower(immediate_needs_response) like '%bachelorette%' or lower(immediate_needs_response) like '%bridal%shower%' or lower(immediate_needs_response) like '%babyshower%' or lower(immediate_needs_response) like '%baby%shower%' or lower(immediate_needs_response) like '%honeymoon%' then 'wedding/babyshower'
+  when lower(immediate_needs_response) like '%birthday%' then 'birthday' 
+  when lower(immediate_needs_response) like '%family%' then 'family event'
+  when lower(immediate_needs_response) like '%pregnant%' or lower(immediate_needs_response) like '%baby%' or lower(immediate_needs_response) like '%maternity%' or lower(immediate_needs_response) like '%postpartum%' or lower(immediate_needs_response) like '%nursing%' then 'maternity'
+  when lower(immediate_needs_response) like '%casual%' or lower(immediate_needs_response) like '%daily%' or lower(immediate_needs_response) like '%effortless%' or lower(immediate_needs_response) like '%every day%' or lower(immediate_needs_response) like '%everyday%' or lower(immediate_needs_response) like '%comfortable%' then 'casual'
+  when lower(immediate_needs_response) like '%college%' or lower(immediate_needs_response) like '%school%' then 'college/school'
+  when lower(immediate_needs_response) like '%night%out%' or lower(immediate_needs_response) like '%going%out%' or lower(immediate_needs_response) like '%dinner%' then 'going out'
+  when lower(immediate_needs_response) like '%holiday%' or lower(immediate_needs_response) like '%thanksgiving%' or lower(immediate_needs_response) like '%christmas%' or lower(immediate_needs_response) like '%valentine%' then 'holiday'
+  when lower(immediate_needs_response) like '%festival%' or lower(immediate_needs_response) like '%concert%' then 'concert'
+  when lower(immediate_needs_response) like '%attend%' then 'event'
+  when lower(immediate_needs_response) like '%other%' or lower(immediate_needs_response) like '%switch%' or lower(immediate_needs_response) like '%add%' or lower(immediate_needs_response) like '%wardrobe%' or lower(immediate_needs_response) like '%new%' then 'diversify closet'
+  else 'other'
+end as immediate_needs_category
+from immediate_needs_data
+)
+, immediate_needs_calculation as
+(
+select immediate_needs_category, count(immediate_needs_category) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'immediate-needs') as total
+from categorized_immediate_needs_response 
+group by immediate_needs_category
+)
+select immediate_needs_category, num_occurred, total, (num_occurred/total) as pct_immediate_needs
+from immediate_needs_calculation
+group by immediate_needs_category, num_occurred, total
+;
+-- Immediate needs breakdown by age
+with immediate_needs_data as
+(
+select distinct profileId, customer_age, rt as immediate_needs_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'immediate-needs'
+)
+, categorized_immediate_needs_response as
+(
+select *,
+case 
+  when lower(immediate_needs_response) like '%date%night%' or lower(immediate_needs_response) like '%date%' then 'date'
+  when lower(immediate_needs_response) like '%work%' or lower(immediate_needs_response) like '%job%' or lower(immediate_needs_response) like '%interview%' or lower(immediate_needs_response) like '%professional%' or lower(immediate_needs_response) like '%office%' then 'work'
+  when lower(immediate_needs_response) like '%vacation%' or lower(immediate_needs_response) like '%going%to%' or lower(immediate_needs_response) like '%getaway%' or lower(immediate_needs_response) like '%trip%' or lower(immediate_needs_response) like '%girl%weekend%' or lower(immediate_needs_response) like '%visit%' or lower(immediate_needs_response) like '%travel%' or lower(immediate_needs_response) like '%head%to%' then 'vacation/traveling'
+  when lower(immediate_needs_response) like '%wedding%' or lower(immediate_needs_response) like '%bachelorette%' or lower(immediate_needs_response) like '%bridal%shower%' or lower(immediate_needs_response) like '%babyshower%' or lower(immediate_needs_response) like '%baby%shower%' or lower(immediate_needs_response) like '%honeymoon%' then 'wedding/babyshower'
+  when lower(immediate_needs_response) like '%birthday%' then 'birthday' 
+  when lower(immediate_needs_response) like '%family%' then 'family event'
+  when lower(immediate_needs_response) like '%pregnant%' or lower(immediate_needs_response) like '%baby%' or lower(immediate_needs_response) like '%maternity%' or lower(immediate_needs_response) like '%postpartum%' or lower(immediate_needs_response) like '%nursing%' then 'maternity'
+  when lower(immediate_needs_response) like '%casual%' or lower(immediate_needs_response) like '%daily%' or lower(immediate_needs_response) like '%effortless%' or lower(immediate_needs_response) like '%every day%' or lower(immediate_needs_response) like '%everyday%' or lower(immediate_needs_response) like '%comfortable%' then 'casual'
+  when lower(immediate_needs_response) like '%college%' or lower(immediate_needs_response) like '%school%' then 'college/school'
+  when lower(immediate_needs_response) like '%night%out%' or lower(immediate_needs_response) like '%going%out%' or lower(immediate_needs_response) like '%dinner%' then 'going out'
+  when lower(immediate_needs_response) like '%holiday%' or lower(immediate_needs_response) like '%thanksgiving%' or lower(immediate_needs_response) like '%christmas%' or lower(immediate_needs_response) like '%valentine%' then 'holiday'
+  when lower(immediate_needs_response) like '%festival%' or lower(immediate_needs_response) like '%concert%' then 'concert'
+  when lower(immediate_needs_response) like '%attend%' then 'event'
+  when lower(immediate_needs_response) like '%other%' or lower(immediate_needs_response) like '%switch%' or lower(immediate_needs_response) like '%add%' or lower(immediate_needs_response) like '%wardrobe%' or lower(immediate_needs_response) like '%new%' then 'diversify closet'
+  else 'other'
+end as immediate_needs_category
+from immediate_needs_data
+)
+, customer_age_immediate_needs as
+(
+select
+case 
+  when customer_age < 25 then '-25'
+  when customer_age between 25 and 30 then '25-29'
+  when customer_age between 30 and 35 then '30-34'
+  when customer_age between 35 and 40 then '35-39'
+  when customer_age between 40 and 45 then '40-44'
+  when customer_age > 45 then '45+'
+  else null
+  end as age_bracket, immediate_needs_category, count(distinct profileId) as num_cust
+from categorized_immediate_needs_response
+group by immediate_needs_category, age_bracket
+order by age_bracket
+)
+,total_cust as
+(
+select age_bracket, sum(num_cust) as total_cust_by_immediate_needs
+from customer_age_immediate_needs
+group by age_bracket
+)
+select age_bracket, immediate_needs_category, num_cust, total_cust_by_immediate_needs, num_cust/total_cust_by_immediate_needs as pct_cust_by_age
+from customer_age_immediate_needs
+left join total_cust using(age_bracket)
+order by age_bracket
+;
+-- Personal Style
+with personal_style_data as
+(
+select distinct rt as personal_style_response, count(rt) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'personal-style') as total
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'personal-style'
+group by personal_style_response
+)
+select personal_style_response, num_occurred, total, (num_occurred/total) as pct_personal_style
+from personal_style_data
+;
+-- Personal Style breakdown by age
+with personal_style_data as
+(
+select distinct profileId, reviewType, rt, customer_age
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'personal-style'
+)
+, customer_age_personal_style as
+(
+select
+case 
+  when customer_age < 25 then '-25'
+  when customer_age between 25 and 30 then '25-29'
+  when customer_age between 30 and 35 then '30-34'
+  when customer_age between 35 and 40 then '35-39'
+  when customer_age between 40 and 45 then '40-44'
+  when customer_age > 45 then '45+'
+  else null
+  end as age_bracket, rt as personal_style, count(distinct profileId) as num_cust
+from personal_style_data
+group by rt, age_bracket
+order by age_bracket
+)
+,total_cust as
+(
+select age_bracket, sum(num_cust) as total_cust_by_age
+from customer_age_personal_style
+group by age_bracket
+)
+select age_bracket, personal_style, num_cust, total_cust_by_age, num_cust/total_cust_by_age as pct_cust_by_age
+from customer_age_personal_style
+left join total_cust using(age_bracket)
+order by age_bracket
+;
+-- Personal Style breakdown by state
+with personal_style_data as
+(
+select distinct profileId, reviewType, rt, customer_shipped_state
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'personal-style'
+)
+, customer_state_personal_style as
+(
+select customer_shipped_state, rt as personal_style, count(distinct profileId) as num_cust
+from personal_style_data
+group by rt, customer_shipped_state
+order by customer_shipped_state
+)
+,total_cust as
+(
+select customer_shipped_state, sum(num_cust) as total_cust_by_state
+from customer_state_personal_style
+group by customer_shipped_state
+)
+select customer_shipped_state, personal_style, num_cust, total_cust_by_state, num_cust/total_cust_by_state as pct_cust_by_state
+from customer_state_personal_style
+left join total_cust using(customer_shipped_state)
+order by total_cust_by_state desc, customer_shipped_state, pct_cust_by_state desc
+;
+-- Favorite Outffit (category)
+with favorite_outfit_data as
+(
+select distinct profileId, rt as favorite_outfit_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'favorite-outfit'
+)
+, categorized_favorite_outfit_response as
+(
+select *,
+case
+  when lower(favorite_outfit_response) like '%jumpsuit%' or lower(favorite_outfit_response) like '%jump suit%' or lower(favorite_outfit_response) like '%bodysuit%' or lower(favorite_outfit_response) like '%romper%' or lower(favorite_outfit_response) like '%overall%' or lower(favorite_outfit_response) like '%one piece%' then 'one piece'
+  when lower(favorite_outfit_response) like '%set%' or lower(favorite_outfit_response) like '%matching%' or lower(favorite_outfit_response) like '%two%pieces%'then 'sets'
+  when lower(favorite_outfit_response) like '%dress%' then 'dresses'
+  when lower(favorite_outfit_response) like '%jeans%' then 'jeans'
+  when lower(favorite_outfit_response) like '%pants%' or lower(favorite_outfit_response) like '%trousers%' then 'pants'
+  when lower(favorite_outfit_response) like '%skirt%' then 'skirts'
+  when lower(favorite_outfit_response) like '%sweats%' or lower(favorite_outfit_response) like '%athleisure%' then 'athleisure' 
+  when lower(favorite_outfit_response) like '%shorts%' then 'shorts'
+  when lower(favorite_outfit_response) like '%tee%' or lower(favorite_outfit_response) like '%top%' or lower(favorite_outfit_response) like '%tank%' or lower(favorite_outfit_response) like '%shirt%' then 'tops'  
+  when lower(favorite_outfit_response) like '%jacket%' or lower(favorite_outfit_response) like '%coat%' or lower(favorite_outfit_response) like '%blouses%' then 'jackets + coats' 
+  when lower(favorite_outfit_response) like '%sweater%' or lower(favorite_outfit_response) like '%sweatshirt%' then 'sweaters + sweatshirts'  
+  else 'other'
+  end as clothes_category
+from favorite_outfit_data
+)
+, favorite_outfit_calculation as
+(
+select clothes_category, count(clothes_category) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'favorite-outfit') as total
+from categorized_favorite_outfit_response 
+group by clothes_category
+)
+select clothes_category, num_occurred, total, (num_occurred/total) as pct_favorite_outfit
+from favorite_outfit_calculation
+group by clothes_category, num_occurred, total
+;
+
+-- Favorite Outfit (silhouette)
+with favorite_outfit_data as
+(
+select distinct profileId, rt as favorite_outfit_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'favorite-outfit'
+)
+, categorized_favorite_outfit_response as
+(
+select *,
+case
+  when lower(favorite_outfit_response) like '%small%' or lower(favorite_outfit_response) like '%tight%' or lower(favorite_outfit_response) like '%fit%' then 'fitted'
+  when lower(favorite_outfit_response) like '%high waist%' or lower(favorite_outfit_response) like '%high%waist%'then 'high waist'
+  when lower(favorite_outfit_response) like '%button%' then 'short button up'
+  when lower(favorite_outfit_response) like '%short sleeve%' then 'short sleeves'
+  when lower(favorite_outfit_response) like '%long sleeve%' then 'long sleeves'
+  when lower(favorite_outfit_response) like '%flare%' or lower(favorite_outfit_response) like '%wideleg%' or lower(favorite_outfit_response) like '%wide%leg%' or lower(favorite_outfit_response) like '%bell%' then 'flared leg'
+  when lower(favorite_outfit_response) like '%straightleg%' or lower(favorite_outfit_response) like '%straight%leg%'then 'straight leg'
+  when lower(favorite_outfit_response) like '%skinny%' then 'skinny'
+  when lower(favorite_outfit_response) like '%flow%' then 'flowy'
+  when lower(favorite_outfit_response) like '%comf%' or lower(favorite_outfit_response) like '%oversize%' or lower(favorite_outfit_response) like '%big%' or lower(favorite_outfit_response) like '%chunky%' then 'oversize'
+  when lower(favorite_outfit_response) like '%crop%' then 'cropped'
+  when lower(favorite_outfit_response) like '%midi%' then 'midi'
+  when lower(favorite_outfit_response) like '%mini%' or lower(favorite_outfit_response) like '%short%' then 'mini/short'
+  when lower(favorite_outfit_response) like '%maxi%' or lower(favorite_outfit_response) like '%long%' then 'maxi'
+  when lower(favorite_outfit_response) like '%v neck%' then 'v neck'
+  when lower(favorite_outfit_response) like '%mock%neck%' or lower(favorite_outfit_response) like '%mockneck%' or lower(favorite_outfit_response) like '%turtle%neck%' or lower(favorite_outfit_response) like '%turtleneck%' then 'high neck'
+  when lower(favorite_outfit_response) like '%square%' then 'square neck'
+  when lower(favorite_outfit_response) like '%ripped%' or lower(favorite_outfit_response) like '%distressed%' then 'ripped'
+  else 'other'
+  end as silhouette
+from favorite_outfit_data
+)
+, favorite_outfit_calculation as
+(
+select silhouette, count(silhouette) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'favorite-outfit') as total
+from categorized_favorite_outfit_response 
+group by silhouette
+)
+select silhouette, num_occurred, total, (num_occurred/total) as pct_favorite_outfit
+from favorite_outfit_calculation
+group by silhouette, num_occurred, total
+;
+
+--Style Icon
+with style_icon_data as
+(
+select distinct profileId, rt as style_icon_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'style-icon'
+)
+, categorized_style_icon_response as
+(
+select *,
+case
+  when lower(style_icon_response) like '%bieber%' or lower(style_icon_response) like '%hailey baldwin%' then 'Hailey Bieber'
+  when lower(style_icon_response) like '%zendaya%' then 'Zendaya'
+  when lower(style_icon_response) like '%dua lipa%' then 'Dua Lipa'
+  when lower(style_icon_response) like '%kendall jenner%' then 'Kendall Jenner'
+  when lower(style_icon_response) like '%selena gomez%' then 'Selena Gomez'
+  when lower(style_icon_response) like '%dakota johnson%' then 'Dakota Johnson'
+  when lower(style_icon_response) like '%blake lively%' then 'Blake Lively'
+  when lower(style_icon_response) like '%jen%aniston%' or lower(style_icon_response) like '%rachel green%' then 'Jennifer Aniston'
+  when lower(style_icon_response) like '%kate middleton%' then 'Kate Middleton'
+  when lower(style_icon_response) like '%meghan markle%' then 'Meghan Markle'
+  when lower(style_icon_response) like '%zoe kravitz%' then 'Zoe Kravitz'
+  when lower(style_icon_response) like '%audrey hepburn%' then 'Audrey Hepburn'
+  when lower(style_icon_response) like '%alexa chung%' then 'Alexa Chung'
+  when lower(style_icon_response) like '%ashley olsen%' or lower(style_icon_response) like '%olsen twins%' or lower(style_icon_response) like '%ashley olson%' then 'Mary Kate and Ashley Olsen '
+  when lower(style_icon_response) like '%kat%hepburn%' then 'Katherine Hepburn'
+  when lower(style_icon_response) like '%emma chamberlain%' then 'Emma Chamberlain'
+  when lower(style_icon_response) like '%zooey deschanel%' then 'Zooey Deschanel'
+  when lower(style_icon_response) like '%olivia palermo%' then 'Olivia Palermo'
+  else 'other'
+  end as style_icon
+  from style_icon_data
+)
+, style_icon_calculation as
+(
+select style_icon, count(style_icon) as num_occurred, (select count(rt) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'style-icon') as total
+from categorized_style_icon_response 
+group by style_icon  
+)
+select style_icon, num_occurred, total, (num_occurred/total) as pct_style_icon
+from style_icon_calculation
+group by style_icon, num_occurred, total
+;
+--Style Icon (by age)
+with style_icon_data as
+(
+select distinct profileId, customer_age, rt as style_icon_response
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+left join `rental-prod.nuuly_reporting.customer_profile` on profileId = account_id
+where reviewType = 'style-icon'
+)
+, categorized_style_icon_response as
+(
+select *,
+case
+  when lower(style_icon_response) like '%bieber%' or lower(style_icon_response) like '%hailey baldwin%' then 'Hailey Bieber'
+  when lower(style_icon_response) like '%zendaya%' then 'Zendaya'
+  when lower(style_icon_response) like '%dua lipa%' then 'Dua Lipa'
+  when lower(style_icon_response) like '%kendall jenner%' then 'Kendall Jenner'
+  when lower(style_icon_response) like '%selena gomez%' then 'Selena Gomez'
+  when lower(style_icon_response) like '%dakota johnson%' then 'Dakota Johnson'
+  when lower(style_icon_response) like '%blake lively%' then 'Blake Lively'
+  when lower(style_icon_response) like '%jen%aniston%' or lower(style_icon_response) like '%rachel green%' then 'Jennifer Aniston'
+  when lower(style_icon_response) like '%kate middleton%' then 'Kate Middleton'
+  when lower(style_icon_response) like '%meghan markle%' then 'Meghan Markle'
+  when lower(style_icon_response) like '%zoe kravitz%' then 'Zoe Kravitz'
+  when lower(style_icon_response) like '%audrey hepburn%' then 'Audrey Hepburn'
+  when lower(style_icon_response) like '%alexa chung%' then 'Alexa Chung'
+  when lower(style_icon_response) like '%ashley olsen%' or lower(style_icon_response) like '%olsen twins%' or lower(style_icon_response) like '%ashley olson%' then 'Mary Kate and Ashley Olsen '
+  when lower(style_icon_response) like '%kat%hepburn%' then 'Katherine Hepburn'
+  when lower(style_icon_response) like '%emma chamberlain%' then 'Emma Chamberlain'
+  when lower(style_icon_response) like '%zooey deschanel%' then 'Zooey Deschanel'
+  when lower(style_icon_response) like '%olivia palermo%' then 'Olivia Palermo'
+  else 'other'
+  end as style_icon
+  from style_icon_data
+)
+, customer_age_style_icon as
+(
+select
+case 
+  when customer_age < 25 then '-25'
+  when customer_age between 25 and 30 then '25-29'
+  when customer_age between 30 and 35 then '30-34'
+  when customer_age between 35 and 40 then '35-39'
+  when customer_age between 40 and 45 then '40-44'
+  when customer_age > 45 then '45+'
+  else null
+  end as age_bracket, style_icon, count(distinct profileId) as num_cust
+from categorized_style_icon_response
+group by style_icon, age_bracket
+order by age_bracket
+)
+,total_cust as
+(
+select age_bracket, sum(num_cust) as total_cust_by_style_icon
+from customer_age_style_icon
+group by age_bracket
+)
+select age_bracket, style_icon, num_cust, total_cust_by_style_icon, num_cust/total_cust_by_style_icon as pct_cust_by_age
+from customer_age_style_icon
+left join total_cust using(age_bracket)
+order by age_bracket
+;
+-- How many people give us their social links?
+with social_links_data as 
+(
+select count(rt) as total_social_links_response, (select count(distinct profileId) from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt where reviewType = 'occasions-qs') as total_filled_form 
+from `rental-prod.nuuly_messages.cx_reviews_messages`, unnest(questions) q, unnest(reviewText) rt 
+where reviewType = 'social-links'
+)
+select total_social_links_response, total_filled_form, total_social_links_response/total_filled_form as pct_give_social
+from social_links_data
