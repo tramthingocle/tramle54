@@ -49,5 +49,5 @@ SQL:
 
 Python:
 - News Webscrapper: Scrapped multiple news sources to find desired news articles according to a given keyword
-  - <a href="">Code </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Web-scraping%20Project.ipynb">Code </a> 
 
