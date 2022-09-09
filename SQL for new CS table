@@ -1,0 +1,96 @@
+create or replace table `nuuly_dsa_sandbox.customer_success`  as
+-- Conversation
+-- Edit the admin table to seperate Tierney and Tierney G
+with admin as
+(
+select id, case when id = '3807940' then 'Tierney G' else name end as name
+from `fivetran_intercom.admin`
+)
+-- Edit the conversation_history table to get the most recent row of the conversation only
+, conversation_history as
+(
+select id, message_author_id, message_author_type, updated_at, snoozed_until, state, created_at, conversation_rating_teammate_id, conversation_rating_value
+from `rental-prod.fivetran_intercom.conversation_history`
+qualify row_number() over (partition by id order by updated_at desc) = 1
+)
+-- Edit get when the conversation was opened and closed 
+, conversation_history_time as
+(
+select c.id as conversation_id, 
+	MIN(c.created_at) as opened_at,
+	MIN(CASE WHEN state='closed' THEN c.updated_at ELSE NULL END) as closed_at,
+  MAX(CASE WHEN state='closed' THEN c.updated_at ELSE NULL END) as final_closed_at,
+  MAX(CASE WHEN cth.tag_id is not null then 1 else 0 end) as is_tagged
+from `rental-prod.fivetran_intercom.conversation_history` c
+left join `rental-prod.fivetran_intercom.conversation_tag_history` cth
+  ON cth.conversation_id = c.id
+GROUP BY 1
+)
+-- Edit tag table to nest the tags together
+, distinct_tag as
+(
+select distinct conversation_id, tag_id
+from `rental-prod.fivetran_intercom.conversation_tag_history`
+)
+, conversation_tag_history as
+(
+select conversation_id, ARRAY_AGG((SELECT AS STRUCT tag_id, name as tag_name)) as tag
+from distinct_tag
+left join `rental-prod.fivetran_intercom.tag` t on t.id = tag_id
+group by conversation_id
+)
+-- Join all tables above together
+, conversation as
+(
+select ch.id as conversation_id, ch.message_author_id, ch.message_author_type,
+case 
+  when message_author_type = 'user' then 'Inbound'
+  when message_author_type in ('admin', 'lead') then 'Outbound'
+  else null
+end as conversation_type,
+DATETIME(ch.updated_at,'America/New_York') as updated_at, 
+DATETIME(opened_at,'America/New_York') as opened_datetime, 
+DATETIME(closed_at,'America/New_York') as closed_datetime, 
+DATETIME(final_closed_at,'America/New_York') as final_closed_at, 
+TIMESTAMP_DIFF(closed_at, opened_at, MINUTE)/60.0/24.00 as days_to_conversation_end, 
+CASE WHEN closed_at IS NOT NULL THEN 1 ELSE 0 END as is_closed, 
+cht.is_tagged, 
+DATETIME(ch.snoozed_until,'America/New_York') as snoozed_until, 
+ch.state, 
+DATETIME(ch.created_at,'America/New_York') as created_at, 
+a.name as associate_name, 
+ch.conversation_rating_teammate_id, 
+ch.conversation_rating_value as conversation_rating_value, 
+tag
+from conversation_history ch
+left join admin a on a.id = ch.conversation_rating_teammate_id
+left join conversation_history_time cht on cht.conversation_id = ch.id
+left join conversation_tag_history cth on cth.conversation_id = ch.id
+where 1=1
+)
+-- Nest all conversation parts
+, conversation_part_with_no_url as
+(
+SELECT conversation_id, pah.id as message_id, author_id, author_type, email, a.name, body, DATETIME(updated_at,'America/New_York') as part_updated_at, DATETIME(created_at,'America/New_York') as part_created_at, t.name as inbound_request, assigned_to_id as inbound_request_id, part_type
+from `rental-prod.fivetran_intercom.conversation_part_history` pah
+left join `rental-prod.fivetran_intercom.admin` a on a.id = author_id
+left join `rental-prod.fivetran_intercom.team` t on pah.assigned_to_id = t.id
+)
+, conversation_part_attachment as
+(
+select conversation_part_id, 
+ARRAY_AGG((SELECT AS STRUCT url) order by conversation_part_updated_at) as url
+from`rental-prod.fivetran_intercom.conversation_part_attachment_history`
+group by conversation_part_id
+)
+, nested as
+(
+select conversation_id, 
+ARRAY_AGG((SELECT AS STRUCT message_id, author_id, author_type, email, name, body, url, part_updated_at, part_created_at, inbound_request, inbound_request_id, part_type) order by part_created_at) as details
+from conversation_part_with_no_url
+left join conversation_part_attachment on message_id = conversation_part_id
+group by conversation_id
+)
+select *
+from conversation
+left join nested using(conversation_id)
