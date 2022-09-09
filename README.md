@@ -52,7 +52,6 @@ SQL:
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Clothes%20Average%20Shelf%20Time" target="blank">Code </a> 
 - Styling Survey Analytics: Analyze a styling survey to gain insights on customer preferences
     - <a href="https://github.com/tramthingocle/tramle54/blob/main/Styling%20Survey%20Analytics"  target="blank">Code </a> 
-    - target="blank">Dashboard </a> 
 
 Python:
 - Clothes amortization rate: Graph how fast clothing classes break even against each other to see the determine popularity and forecast customer demand
