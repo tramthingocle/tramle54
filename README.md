@@ -48,6 +48,8 @@ SQL:
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Holiday%202021_%20Rent_Browsing%20Trends%20by%20Class.xlsx" target="blank">Excel </a> 
 - Customer Success Reporting Table: Create a source of truth for all customer success related data in Looker dashboards
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Customer%20Success%20Reporting%20Table" target="blank">Code </a> 
+- Clothes Average Shelf Time: Analyze clothing average shelf time at the warehouse to determine average usage by class
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Clothes%20Average%20Shelf%20Time" target="blank">Code </a> 
 
 Python:
 - Clothes amortization rate: Graph how fast clothing classes break even against each other to see the determine popularity and forecast customer demand
