@@ -48,6 +48,6 @@ SQL:
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Holiday%202021_%20Rent_Browsing%20Trends%20by%20Class.xlsx" target="blank">Excel </a> 
 
 Python:
-- Clothes amortization rate: Graph how fast clothing classes break even against each other to see the determine popularity and forecast customer demand
-  - <a href="https://github.com/tramthingocle/tramle54/blob/main/Clothes%20amortization%20rate.ipynb" target="blank">Code </a> 
+- News Webscrapper: Scrapped multiple news sources to find desired news articles according to a given keyword
+  - <a href="">Code </a> 
 
