@@ -50,4 +50,9 @@ SQL:
 Python:
 - News Webscrapper: Scrapped multiple news sources to find desired news articles according to a given keyword
   - <a href="https://github.com/tramthingocle/tramle54/blob/main/Web-scraping%20Project.ipynb">Code </a> 
-
+- Spellchecker: A program that check for spelling errors using class and return the errors and their locations
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/main.py" target="blank">Code </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/spellchecker.py" target="blank">Spellchecker Class </a> 
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/english_words.txt">Keyword Bank </a>
+  - <a href="https://github.com/tramthingocle/tramle54/blob/main/raven.txt">Sample Text </a> 
+  
